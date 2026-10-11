@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏃 追及大冒险 · 互动数学闯关</title>
+<style>
+  :root{
+    --sky-a:#e8f6ff; --sky-b:#f0f9ff; --card:#fff;
+    --ink:#22364f; --sub:#5c718c;
+    --green:#22c55e; --green-d:#16a34a;
+    --red:#ef4444; --blue:#3b82f6; --blue-d:#2563eb;
+    --gold:#f59e0b; --purple:#8b5cf6;
+    --shadow:0 8px 24px rgba(50,90,150,.14);
+    --shadow-lg:0 12px 40px rgba(50,90,150,.22);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
+    background:linear-gradient(165deg,var(--sky-a),var(--sky-b) 55%,#e6fbff);
+    color:var(--ink);min-height:100vh;padding:16px 14px 90px;line-height:1.65;
+  }
+  .wrap{max-width:900px;margin:0 auto}
+
+  /* ── header ─────────────────────────── */
+  header{text-align:center;padding:10px 8px 4px}
+  header h1{font-size:clamp(24px,6vw,36px);letter-spacing:1px;
+    text-shadow:1px 1px 0 #fff,2px 2px 0 #bfe3ff}
+  header .sub{color:var(--sub);font-size:14px;margin-top:4px}
+  .motto{display:inline-block;margin-top:8px;background:#fff;border:2px dashed var(--blue);
+    color:var(--blue-d);font-weight:700;font-size:13px;padding:5px 16px;border-radius:20px;
+    box-shadow:0 3px 10px rgba(59,130,246,.12)}
+
+  /* ── topbar / progress ──────────────── */
+  .topbar{position:sticky;top:8px;z-index:20;background:rgba(255,255,255,.92);
+    backdrop-filter:blur(8px);border-radius:14px;padding:10px 14px;margin:12px 0;
+    box-shadow:var(--shadow);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .pbar{flex:1;height:15px;background:#e3edf7;border-radius:20px;overflow:hidden;min-width:120px}
+  .pfill{height:100%;width:0;background:linear-gradient(90deg,var(--green),#7be495);
+    transition:width .5s ease;border-radius:20px}
+  .stat{font-weight:800;font-size:14px;white-space:nowrap}
+  .coins{color:var(--gold)}
+  .stars{color:var(--gold);font-size:16px;letter-spacing:1px}
+
+  /* ── level map (tabs) ───────────────── */
+  .tabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:8px;margin:14px 0}
+  .tab{border:none;cursor:pointer;padding:10px 8px;border-radius:14px;font-size:14px;font-weight:800;
+    background:#fff;color:var(--sub);box-shadow:0 3px 8px rgba(60,100,160,.12);transition:.2s;
+    position:relative;display:flex;flex-direction:column;align-items:center;gap:2px}
+  .tab .emoji{font-size:22px;line-height:1.1}
+  .tab .lk{font-size:11px;font-weight:600}
+  .tab:hover{transform:translateY(-2px)}
+  .tab.active{background:var(--blue);color:#fff;transform:translateY(-2px);box-shadow:0 6px 16px rgba(37,99,235,.35)}
+  .tab.locked{opacity:.45;cursor:not-allowed}
+  .tab .badge{position:absolute;top:-7px;right:-4px;background:var(--green);color:#fff;
+    font-size:10px;border-radius:10px;padding:1px 6px;display:none}
+  .tab.done .badge{display:block}
+
+  /* ── card ───────────────────────────── */
+  .card{background:var(--card);border-radius:18px;box-shadow:var(--shadow-lg);
+    padding:20px 18px;margin-bottom:16px;border:1px solid #e8f1fa}
+  .card h2{font-size:20px;display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+  .lvl-desc{font-size:13.5px;color:var(--sub);background:#f0f7ff;border-left:4px solid var(--blue);
+    padding:9px 13px;border-radius:8px;margin-bottom:14px}
+
+  /* ── chase stage ────────────────────── */
+  .stage{background:linear-gradient(#dff0fc,#c9e6f8);border-radius:14px;padding:10px;margin:10px 0;
+    border:2px dashed #9ccbea;position:relative;overflow:hidden}
+  svg{width:100%;height:auto;display:block;touch-action:manipulation}
+  .stage-ctrl{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+  .timeline{font-size:13px;text-align:center;margin-top:6px;min-height:22px;color:#1c66a8;font-weight:700}
+
+  /* ── buttons ────────────────────────── */
+  button.act{border:none;cursor:pointer;padding:9px 16px;border-radius:11px;font-weight:800;font-size:14px;
+    transition:.15s;box-shadow:0 3px 7px rgba(0,0,0,.12);font-family:inherit}
+  .btn-play{background:var(--blue);color:#fff}
+  .btn-hint{background:#fff3cf;color:#9a7415}
+  .btn-sol{background:#eef2f7;color:#556}
+  .btn-check{background:var(--green);color:#fff}
+  .btn-next{background:var(--blue-d);color:#fff}
+  .btn-back{background:#eef2f7;color:#556}
+  button.act:active{transform:scale(.94)}
+  button.act:disabled{opacity:.5;cursor:default}
+
+  /* ── question area ──────────────────── */
+  .q{font-size:16.5px;margin:10px 0;font-weight:600}
+  .q .qno{display:inline-block;background:var(--blue);color:#fff;border-radius:8px;
+    padding:1px 9px;font-size:13px;margin-right:6px;flex:none}
+  .question-row{display:flex;align-items:flex-start;gap:2px}
+  .ans-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0}
+  .ans-row input{font-size:18px;padding:9px 12px;border:2px solid #cfe0f0;border-radius:10px;
+    width:110px;text-align:center;font-weight:800;background:#fbfeff;color:var(--ink);font-family:inherit}
+  .ans-row input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px #cfe4fb}
+  .ans-row input.ok{border-color:var(--green);background:#f0fdf4}
+  .ans-row input.err{border-color:var(--red);background:#fef2f2;animation:shake .3s}
+  @keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+  .unit{color:var(--sub);font-weight:700}
+  .feedback{font-size:15px;font-weight:800;min-height:24px;margin-top:2px}
+  .fb-ok{color:var(--green-d)} .fb-no{color:var(--red)}
+  .hintbox,.solbox{display:none;margin-top:10px;padding:12px 14px;border-radius:10px;font-size:14px}
+  .hintbox{background:#fff8e1;border:1px dashed var(--gold)}
+  .hintbox b{color:#b45309}
+  .solbox{background:#f2f8f2;border:1px solid #c9e5c9}
+  .solbox b{color:var(--green-d)}
+  .show-block{display:block!important;animation:pop .25s}
+  @keyframes pop{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+  /* ── formula pocket ─────────────────── */
+  .fbtn{position:fixed;bottom:18px;right:16px;z-index:40;background:var(--purple);color:#fff;
+    border:none;border-radius:50%;width:56px;height:56px;font-size:22px;cursor:pointer;
+    box-shadow:0 6px 16px rgba(139,92,246,.4);transition:.2s}
+  .fbtn:active{transform:scale(.9)}
+  .fpanel{position:fixed;inset:auto 16px 84px 16px;max-width:520px;margin:0 auto;z-index:41;
+    background:#fff;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.25);padding:16px;
+    display:none;border:2px solid #ddd6fe}
+  .fpanel.show{display:block;animation:pop .25s}
+  .fpanel h3{color:var(--purple);margin-bottom:8px}
+  .fpanel ul{list-style:none}
+  .fpanel li{padding:7px 10px;margin:6px 0;background:#f5f3ff;border-radius:8px;font-size:14px}
+  .fpanel li b{color:var(--purple)}
+
+  /* ── toast / celebration ────────────── */
+  .toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.6);
+    background:rgba(20,35,60,.92);color:#fff;padding:20px 32px;border-radius:18px;font-size:24px;
+    font-weight:800;z-index:99;opacity:0;pointer-events:none;transition:.3s;text-align:center;line-height:1.4}
+  .toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  .confetti{position:fixed;inset:0;pointer-events:none;z-index:98}
+  .foot{text-align:center;color:var(--sub);font-size:12.5px;padding:18px 0}
+
+  /* ── final award ────────────────────── */
+  .award{display:none;text-align:center;margin-top:14px}
+  .award.show{display:block;animation:pop .4s}
+  .award h3{font-size:22px;color:var(--gold);margin:8px 0}
+  .award .medal{font-size:54px;animation:spin-in 1s ease}
+  @keyframes spin-in{from{transform:rotate(-180deg) scale(0)}to{transform:rotate(0) scale(1)}}
+  .award p{color:var(--sub);font-size:14px}
+  .hidden{display:none!important}
+
+  @media (max-width:520px){
+    .ans-row input{width:88px}
+    .fpanel{inset:auto 10px 84px 10px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🏃 追及大冒险</h1>
+    <p class="sub">慢的一方先出发，快的一方去追赶 —— 什么时候能追上呢？</p>
+    <span class="motto">每闯过一关得一颗 ⭐，全部通关赢大奖章！</span>
+  </header>
+
+  <div class="topbar">
+    <span class="stat coins">🪙 <span id="coins">0</span></span>
+    <div class="pbar"><div class="pfill" id="pfill"></div></div>
+    <span class="stat"><span id="doneN">0</span>/<span id="totN">5</span> 关</span>
+    <span class="stars" id="starRow"></span>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="card" id="mainCard">
+    <h2 id="lvlTitle" class="question-row"></h2>
+    <div class="lvl-desc" id="lvlDesc"></div>
+
+    <div class="stage">
+      <svg id="race" viewBox="0 0 640 250" aria-label="追及动画跑道"></svg>
+      <div class="stage-ctrl" id="stageCtrl"></div>
+      <div class="timeline" id="timeline"></div>
+    </div>
+
+    <div class="q question-row" id="qText"></div>
+    <div class="ans-row" id="ansRow"></div>
+    <div class="feedback" id="fb"></div>
+    <div class="hintbox" id="hintBox"></div>
+    <div class="solbox" id="solBox"></div>
+
+    <div class="qnav" style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:8px;flex-wrap:wrap">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="act btn-hint" id="hintBtn">💡 提示</button>
+        <button class="act btn-sol" id="solBtn">📖 看解析</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="act btn-check" id="checkBtn">✔ 检查</button>
+        <button class="act btn-next" id="nextBtn">下一题 →</button>
+      </div>
+    </div>
+
+    <div class="award" id="award">
+      <div class="medal">🏆</div>
+      <h3>追及大师勋章！</h3>
+      <p>甲追赶的路程 = 乙先走的 + 乙后走的（追上时两人路程相等）</p>
+      <p>追及时间 = 路程差 ÷ 速度差 &nbsp;→&nbsp; 8 ÷ (6−4) = 4（小时）</p>
+      <button class="act btn-back" onclick="location.reload()" style="margin-top:8px">↺ 重新挑战</button>
+ </div>
+  </div>
+
+  <div class="foot">小羽互动课堂 · 追及问题 · 认知负荷优化版</div>
+</div>
+
+<button class="fbtn" id="formulaBtn" title="公式锦囊">➗</button>
+<div class="fpanel" id="formulaPanel">
+  <h3>🎒 公式锦囊（随时翻看）</h3>
+  <ul>
+    <li>🚶 <b>追及时间 = 路程差 ÷ 速度差</b>（多远的差距 ÷ 每小时追回多少）</li>
+    <li>🐢 兔子比乌龟每小时多走 <b>速度差 = 快的 − 慢的</b></li>
+    <li>🏁 追上时：<b>快的路程 = 慢的路程</b>（两人在同一地点）</li>
+    <li>🧮 交替实例法：换个数字、换个故事，<b>解法三步不变</b>——①找路程差 ②算速度差 ③相除</li>
+  </ul>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="confetti" id="confetti"></div>
+
+<script>
+"use strict";
+/* ══════════════════════════════════════════════════════════
+   追及大冒险 · 关卡数据
+   认知负荷原则：每关只引入一个新概念（速度差→路程差→逼近表格→算式→原题）
+   交替实例原则：例题→练习→变式数字→换故事表皮→混合回掺，深层结构不变
+   ══════════════════════════════════════════════════════════ */
+
+/* 追赶动画配置：每题可带 anim { gap, slow, fast, tMax } 用实数演示本题 */
+const LEVELS = [
+  /* ---------- 关 1：什么是「追」？（速度差感知，无计算） ---------- */
+  {
+    id: `L1`, emoji: `🐢`, title: `第一关 · 谁追得上谁？`,
+    desc: `目标：发现「快的人每小时能追回一点距离」。这一关不用算，用眼睛看，用身体感受！`,
+    anim: { mode:`pullaway`, slow: 4, fast: 6, tMax: 3 },
+    qs: [
+      {
+        text: `哥哥和弟弟同时从家出发去学校。哥哥走得快，弟弟走得慢。出发一段时间后，谁在前面？谁在后面？`,
+        type: `choice`,
+        choices: [`哥哥在前，弟弟追赶 👦`, `弟弟在前，哥哥追赶 👶`],
+        answer: 1,
+        hint: `两人同时出发，走得快的自然在前面。走得慢的落后了，要努力追赶。`,
+        sol: `两人<b>同时出发</b>，哥哥走得快，所以哥哥在前、弟弟在后追赶。`,
+        why: `走路有快有慢，就会拉开距离 —— 这就是「追及问题」的开始！`
+      },
+      {
+        text: `弟弟每小时走 3 千米，哥哥每小时走 5 千米。哥哥比弟弟每小时多走几千米？`,
+        type: `number`, unit: `千米`, answer: 2,
+        hint: `把两个速度<b>相减</b>：多的 = 5 − 3。每小时领先或追回的路程叫「速度差」。`,
+        sol: `速度差 = 5 − 3 = <b>2（千米）</b>。哥哥每小时比弟弟多走 2 千米，也就每小时追回 2 千米。`,
+        why: `「速度差」= 快的 − 慢的。它是追赶的「发动机」！`,
+        anim: { mode:`pullaway`, slow: 3, fast: 5, tMax: 4 }
+      },
+      {
+        text: `姐姐和妹妹赛跑（同时起跑）。姐姐每分钟跑 150 米，妹妹每分钟跑 120 米。姐姐每分钟比妹妹多跑多少米？`,
+        type: `number`, unit: `米`, answer: 30,
+        hint: `和上一题是<b>同一类题</b>：速度差 = 150 − 120。只是故事换成了赛跑、单位换成了米。`,
+        sol: `速度差 = 150 − 120 = <b>30（米）</b>。姐姐每分钟追回 30 米。`,
+        why: `赛跑也好、走路也好，「快的 − 慢的」永远先算速度差。`,
+        anim: { mode:`pullaway`, slow: 120, fast: 150, tMax: 4, unitTime: `分钟`, unitDist: `米`,
+          names: { fast: `姐姐`, slow: `妹妹` }, skin: { fast: `🏃‍♀️`, slow: `🏃‍♀️` } }
+      }
+    ]
+  },
+
+  /* ---------- 关 2：先出发 = 先拉开差距（路程差） ---------- */
+  {
+    id: `L2`, emoji: `🚶`, title: `第二关 · 先出发的「小领先」`,
+    desc: `目标：理解「乙先走了一段，差距不是 0」。难点：差距 = 乙 1 小时走的路。看动画时注意起点旗！`,
+    anim: { gap: 8, slow: 4, fast: 6, tMax: 4, preWalk: true },
+    qs: [
+      {
+        text: `甲、乙都从 A 地出发去 B 地。乙先出发，先走了 1 小时，每小时走 4 千米。这时甲才出发。甲出发时，乙已经走了多远？（这就是两人的「差距」）`,
+        type: `number`, unit: `千米`, answer: 4,
+        hint: `乙先走的路程 = 乙的速度 × 先走的时间 = 4 × 1。看动画：乙的起点旗就在 4 千米处！`,
+        sol: `乙先走 1 小时 × 每小时 4 千米 = <b>4 千米</b>。甲出发那一刻，乙已经在甲前方 4 千米处 —— 这个差距叫<b>路程差</b>。`,
+        why: `先出发 = 先拉开差距。「路程差」就是追赶开始时两人隔的距离。`
+      },
+      {
+        text: `如果题目变成：乙每小时走 4 千米，先走了 2 小时，甲才出发。这时两人的路程差是多少千米？`,
+        type: `number`, unit: `千米`, answer: 8,
+        hint: `路程差 = 乙的速度 × 乙先走的时间。和上一题同一类，只是时间从 1 小时变成 2 小时。`,
+        sol: `路程差 = 4 × 2 = <b>8（千米）</b>。`,
+        why: `对比第 1 题：先走时间翻倍，路程差也翻倍。你发现规律了吗？`
+      },
+      {
+        text: `乌龟先爬了 3 小时，每小时爬 2 千米，兔子才开始追。龟兔的路程差是多少千米？`,
+        type: `number`, unit: `千米`, answer: 6,
+        hint: `还是同一类题！故事换了皮（人换乌龟），单位还是千米：2 × 3。`,
+        sol: `路程差 = 2 × 3 = <b>6（千米）</b>。兔子追龟也一样：先算「龟先爬了多远」。`,
+        why: `交替实例：人→乌龟，走路→爬行，不变的是「路程差 = 慢速 × 先行时间」。`,
+        anim: { gap: 6, slow: 2, fast: 6, tMax: 3, preWalk: true,
+          names: { fast: `兔子`, slow: `乌龟` }, skin: { fast: `🐇`, slow: `🐢` } }
+      }
+    ]
+  },
+
+  /* ---------- 关 3：一小时一小时追回来（逼近表格） ---------- */
+  {
+    id: `L3`, emoji: `⏱️`, title: `第三关 · 每小时追回一点点`,
+    desc: `目标：看着差距一小时一小时变小，直到 0！先按下 ▶ 按钮，盯着「差距」数字的变化。`,
+    anim: { gap: 8, slow: 4, fast: 6, tMax: 4, offset: 8 },
+    qs: [
+      {
+        text: `乙在甲前方 8 千米。甲每小时走 6 千米，乙每小时走 4 千米。甲出发 1 小时后，两人还相差多少千米？`,
+        type: `number`, unit: `千米`, answer: 6,
+        hint: `原来的差距 8 千米，甲每小时追回 (6−4)=2 千米。8 − 2 = ?`,
+        sol: `追回速度 = 速度差 = 6 − 4 = 2 千米/小时。1 小时后差距 = 8 − 2 = <b>6（千米）</b>。`,
+        why: `每小时把差距「吃掉」2 千米。`,
+        anim: { gap: 8, slow: 4, fast: 6, tMax: 4, offset: 8, showGap: true }
+      },
+      {
+        text: `继续！再过 1 小时（甲出发 2 小时后），两人还相差多少千米？`,
+        type: `number`, unit: `千米`, answer: 4,
+        hint: `6 − 2 = ? 每过 1 小时，差距少 2。`,
+        sol: `8 − 2 − 2 = <b>4（千米）</b>。`,
+        why: `差距像漏气的气球，慢慢变小……`,
+        sameAnim: true
+      },
+      {
+        text: `甲出发 3 小时后，两人还相差多少千米？`,
+        type: `number`, unit: `千米`, answer: 2,
+        hint: `4 − 2 = ?`,
+        sol: `8 − 2×3 = <b>2（千米）</b>。`,
+        why: `越来越近了！`,
+        sameAnim: true
+      },
+      {
+        text: `甲出发 4 小时后，两人相差多少千米？这时候发生了一件大事！`,
+        type: `number`, unit: `千米`, answer: 0,
+        hint: `2 − 2 = ? 差距变成 0，意味着什么？`,
+        sol: `8 − 2×4 = <b>0</b> —— <b>甲追上乙了！</b>`,
+        why: `差距变成 0 的那一刻，就是「追上」的那一刻！🎉`,
+        sameAnim: true
+      },
+      {
+        text: `小明在前面 9 千米处，小刚每小时比小明多走 3 千米。小刚几小时能追上？请把表格填完：9→6→3→0。小刚用了几小时追上？`,
+        type: `number`, unit: `hour`, answer: 3,
+        hint: `差距 9 千米，每小时追回 3 千米：9→6→3→0，数一数走了几个「1 小时」。`,
+        sol: `差距从 9 开始，每小时减 3：9→6→3→0，一共用了 <b>3 小时</b>。`,
+        why: `交替实例：数字变了（9 和 3），方法是同一条链条。`,
+        anim: { gap: 9, slow: 4, fast: 7, tMax: 3, offset: 9, showGap: true,
+          names: { fast: `小刚`, slow: `小明` } }
+      }
+    ]
+  },
+
+  /* ---------- 关 4：聪明的算式（形成公式） ---------- */
+  {
+    id: `L4`, emoji: `✨`, title: `第四关 · 聪明的算式`,
+    desc: `目标：不用一格一格数，一步算出追及时间！公式：追及时间 = 路程差 ÷ 速度差。`,
+    anim: { gap: 8, slow: 4, fast: 6, tMax: 4, offset: 8 },
+    qs: [
+      {
+        text: `回想第三关：差距 8 千米，每小时追回 2 千米，4 小时追上。「8 千米里面有几个 2 千米」用哪个算式？`,
+        type: `choice`,
+        choices: [`8 × 2`, `8 ÷ 2`, `8 − 2`],
+        answer: 1,
+        hint: `包含除：一个大数里包含几个小数，用除法。就像「10 里有 5 个 2」用 10 ÷ 2。`,
+        sol: `8 ÷ 2 = 4（小时）——「8 千米里有 4 个 2 千米」，所以 4 小时追上。<b>追及时间 = 路程差 ÷ 速度差</b>`,
+        why: `除法的包含意义，就是追及公式的灵魂！`
+      },
+      {
+        text: `路程差 12 千米，速度差 3 千米/小时。追及时间 = ? 直接做除法！`,
+        type: `number`, unit: `hour`, answer: 4,
+        hint: `12 ÷ 3 = ?`,
+        sol: `12 ÷ 3 = <b>4（小时）</b>。`,
+        why: `数字在变，公式不变：路程差 ÷ 速度差。`
+      },
+      {
+        text: `一辆卡车先出发，轿车去追。轿车每小时比卡车多行 20 千米，卡车先行了 100 千米。轿车几小时追上卡车？`,
+        type: `number`, unit: `hour`, answer: 5,
+        hint: `三步走：①路程差 = 100 ②速度差 = 20 ③相除 100 ÷ 20。`,
+        sol: `100 ÷ 20 = <b>5（小时）</b>。人→车，千米/小时 相同，方法全同。`,
+        why: `交替实例：走路换开车，深层结构一模一样。`,
+        anim: { gap: 100, slow: 60, fast: 80, tMax: 5, offset: 100, unitTime: `小时`,
+          names: { fast: `轿车`, slow: `卡车` }, skin: { fast: `🚗`, slow: `🚚` } }
+      }
+    ]
+  },
+
+  /* ---------- 关 5：完整挑战 + 变式（交替实例总复习） ---------- */
+  {
+    id: `L5`, emoji: `🏁`, title: `第五关 · 完整挑战（终极题）+ 变式挑战`,
+    desc: `现在是见证奇迹的时刻：把学到的三步拼成完整解题！之后还有两道变式守关。`,
+    anim: { gap: 8, slow: 4, fast: 6, tMax: 4, offset: 8 },
+    qs: [
+      {
+        text: `【原题挑战】甲、乙两人从 A 地到 B 地，甲每小时走 6 千米，乙每小时走 4 千米，乙先走了 8 千米后甲才出发。甲出发后几小时追上乙？`,
+        type: `number`, unit: `hour`, answer: 4,
+        hint: `三步走：①路程差 = 乙先走的 8 千米 ②速度差 = 6 − 4 = 2 ③追及时间 = 8 ÷ 2。`,
+        sol: `①路程差 = <b>8</b> 千米（乙先走的）<br>②速度差 = 6 − 4 = <b>2</b> 千米/小时<br>③追及时间 = 8 ÷ 2 = <b>4（小时）</b><br>检验：甲 4 小时走 6×4=24 千米；乙 8+4×4=24 千米。路程相等 ✓ 追上！`,
+        why: `检验神技：追上时两人走的总路程相等！6×4 = 8+4×4 = 24 ✓`
+      },
+      {
+        text: `【变式 1・换数字】乙先走了 12 千米，甲每小时走 7 千米，乙每小时走 4 千米。甲出发后几小时追上乙？`,
+        type: `number`, unit: `hour`, answer: 4,
+        hint: `①路程差 12 ②速度差 7−4=3 ③12 ÷ 3。`,
+        sol: `12 ÷ (7 − 4) = 12 ÷ 3 = <b>4（小时）</b>。`,
+        why: `数字变了，三步法稳如泰山。`
+      },
+      {
+        text: `【变式 2・回掺旧知识】乙先走了 8 千米。现在你知道了甲 4 小时追上乙。请问：追上时，甲一共走了多少千米？（甲每小时走 6 千米）`,
+        type: `number`, unit: `千米`, answer: 24,
+        hint: `甲走的路程 = 甲的速度 × 甲走的时间 = 6 × 4。`,
+        sol: `甲 4 小时走 6 × 4 = <b>24（千米）</b>。再看乙：先走 8 千米 + 又走 4×4=16 千米 = 24 千米。<b>两人路程相等，都在同一地点！</b>`,
+        why: `路程 × 时间的旧知识和追及新知识手拉手。`,
+        anim: { gap: 8, slow: 4, fast: 6, tMax: 4, offset: 8 }
+      },
+      {
+        text: `【变式 3・终极守关】哥哥先走了 6 千米，弟弟每小时走 8 千米，哥哥每小时走 5 千米。弟弟几小时追上哥哥？追上时弟弟走了多少千米？（两问都答对才算过！）`,
+        type: `multi`,
+        fields: [{label:`追及时间`, unit:`hour`, answer:2},{label:`追上时弟弟走的路程`, unit:`km`, answer:16}],
+        answer: null,
+        hint: `第 1 问：6 ÷ (8−5) = 6 ÷ 3。第 2 问：弟弟的路程 = 8 × 追及时间。`,
+        sol: `①追及时间 = 6 ÷ (8 − 5) = <b>2（小时）</b><br>②弟弟走的 = 8 × 2 = <b>16（千米）</b><br>检验：哥哥 6 + 5×2 = 16 千米 = 弟弟的 16 千米 ✓`,
+        why: `两大技能合体：先求追及时间，再求路程。你已经出师了！`,
+        anim: { gap: 6, slow: 5, fast: 8, tMax: 2, offset: 6,
+          names: { fast: `弟弟`, slow: `哥哥` } }
+      }
+    ]
+  }
+];
+
+let state = { level: 0, q: 0, coins: 0, done: [], attempts: {} };
+try { const s = JSON.parse(localStorage.getItem("chaseGameV1")); if (s && s.done) state = s; } catch(e){}
+
+/* ══════════════════════════════════════════════ */
+/*  工具
+/* ══════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+const UNIT = { hour:"小时", km:"千米", 千米:"千米", 米:"米" };
+const unitLabel = u => UNIT[u] || u || "";
+const SVGNS = "http://www.w3.org/2000/svg";
+function el(tag, attrs){ const e = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+
+function save(){ try{ localStorage.setItem("chaseGameV1", JSON.stringify(state)); }catch(e){} }
+function addCoins(n){ state.coins += n; $("coins").textContent = state.coins; save(); }
+
+function showToast(txt){ const t = $("toast"); t.textContent = txt; t.classList.add("show");
+  clearTimeout(showToast._h); showToast._h = setTimeout(()=>t.classList.remove("show"), 1600); }
+
+/* 彩带庆祝 */
+(function(){ const st = document.createElement("style"); st.textContent =
+  ".confetti i{position:absolute;top:-12px;border-radius:2px;animation:fall 2.4s linear forwards}" +
+  "@keyframes fall{to{transform:translateY(108vh) rotate(720deg)}}";
+  document.head.appendChild(st); })();
+const COLORS = ["#f59e0b","#22c55e","#3b82f6","#ef4444","#8b5cf6","#ec4899"];
+function burst(n){
+  const box = $("confetti");
+  for (let i = 0; i < n; i++){
+    const p = document.createElement("i");
+    p.style.left = Math.random()*100 + "vw";
+    p.style.background = COLORS[i % COLORS.length];
+    p.style.width = 6 + Math.random()*6 + "px";
+    p.style.height = 10 + Math.random()*8 + "px";
+    p.style.animationDelay = Math.random()*0.4 + "s";
+    p.style.animationDuration = 1.8 + Math.random()*1.2 + "s";
+    box.appendChild(p);
+    setTimeout(()=>p.remove(), 3600);
+  }
+}
+
+/* ══════════════════════════════════════════════ */
+/*  当前题目访问
+/* ══════════════════════════════════════════════ */
+function curLevel(){ return LEVELS[state.level]; }
+function curQ(){ return curLevel().qs[state.q]; }
+function animOf(q){
+  if (q.sameAnim){ for (let i = state.q; i >= 0; i--){ const a = curLevel().qs[i].anim; if (a) return a; } }
+  return q.anim || curLevel().anim;
+}
+function levelUnlocked(i){ return i === 0 || !!state.done[i-1]; }
+function totalDone(){ return state.done.filter(Boolean).length; }
+
+/* ══════════════════════════════════════════════ */
+/*  关卡 / 题目渲染
+/* ══════════════════════════════════════════════ */
+function renderTabs(){
+  const box = $("tabs"); box.innerHTML = "";
+  LEVELS.forEach((lv, i) => {
+    const b = document.createElement("button");
+    b.className = "tab" + (i === state.level ? " active" : "") +
+      (levelUnlocked(i) ? "" : " locked") + (state.done[i] ? " done" : "");
+    b.innerHTML = '<span class="emoji">' + lv.emoji + "</span>" +
+      '<span class="lk">' + (i+1) + " · " + lv.title.replace(/^第.+关 · /, "") + "</span>" +
+      '<span class="badge">✓</span>';
+    if (levelUnlocked(i)) b.onclick = () => { state.level = i; state.q = 0; renderAll(); };
+    box.appendChild(b);
+  });
+}
+
+function renderTopbar(){
+  $("coins").textContent = state.coins;
+  $("doneN").textContent = totalDone();
+  $("pfill").style.width = (totalDone()/LEVELS.length*100) + "%";
+  $("starRow").textContent = state.done.map(()=> "⭐").join("");
+}
+
+function renderQuestion(){
+  const q = curQ();
+  $("lvlTitle").innerHTML = curLevel().emoji + " " + curLevel().title;
+  $("lvlDesc").innerHTML = curLevel().desc;
+  $("qText").innerHTML = '<span class="qno">第 ' + (state.q+1) + " / " + curLevel().qs.length + " 题</span>" +
+    "<span>" + q.text + "</span>";
+  $("fb").textContent = ""; $("fb").className = "feedback";
+  $("hintBox").className = "hintbox"; $("solBox").className = "solbox";
+  $("nextBtn").disabled = true;
+
+  const row = $("ansRow"); row.innerHTML = "";
+  session = { correct:false, wrong:0, hint:false, solved:false };
+
+  if (q.type === "choice"){
+    $("checkBtn").style.display = "none";
+    q.choices.forEach((c, i) => {
+      const b = document.createElement("button");
+      b.className = "act btn-sol"; b.textContent = c; b.style.fontSize = "15px";
+      b.onclick = () => {
+        if (session.correct) return;
+        if (i === q.answer){ b.classList.remove("btn-sol"); b.classList.add("btn-check");
+          onCorrect(10 - session.wrong*3);
+        } else { b.classList.remove("btn-sol"); b.classList.add("btn-hint");
+          b.style.textDecoration = "line-through"; b.disabled = true; session.wrong++;
+          $("fb").textContent = "❌ 不对哦，再想想～"; $("fb").className = "feedback fb-no"; }
+      };
+      row.appendChild(b);
+    });
+  } else if (q.type === "multi"){
+    $("checkBtn").style.display = "";
+    q.fields.forEach((f, i) => {
+      const wrap = document.createElement("label");
+      wrap.style.cssText = "display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--sub);font-weight:700";
+      wrap.innerHTML = "<span>" + (i+1) + ". " + f.label + "（" + unitLabel(f.unit) + "）</span>";
+      const inp = document.createElement("input");
+      inp.type = "number"; inp.step = "any"; inp.id = "multiIn" + i;
+      inp.onkeydown = e => { if (e.key === "Enter") checkAnswer(); };
+      wrap.appendChild(inp); row.appendChild(wrap);
+    });
+  } else {
+    $("checkBtn").style.display = "";
+    const inp = document.createElement("input");
+    inp.type = "number"; inp.step = "any"; inp.id = "numIn";
+    inp.onkeydown = e => { if (e.key === "Enter") checkAnswer(); };
+    row.appendChild(inp);
+    const u = document.createElement("span"); u.className = "unit"; u.textContent = unitLabel(q.unit);
+    row.appendChild(u);
+    setTimeout(() => inp.focus(), 100);
+  }
+  setupRace(animOf(q));
+}
+
+function renderAll(){ renderTabs(); renderTopbar(); renderQuestion(); }
+
+/* ══════════════════════════════════════════════ */
+/*  判分
+/* ══════════════════════════════════════════════ */
+let session = { correct:false, wrong:0, hint:false, solved:false };
+const eq = (a, b) => Math.abs(parseFloat(a) - b) < 1e-6;
+
+function checkAnswer(){
+  if (session.correct) return;
+  const q = curQ();
+  let vals = [], ans = [];
+  if (q.type === "multi"){
+    let allFilled = true;
+    q.fields.forEach((f, i) => {
+      const inp = $("multiIn" + i); vals.push(inp.value);
+      if (inp.value === "") allFilled = false;
+      inp.className = "";
+    });
+    if (!allFilled){ $("fb").textContent = "先把两个空都填好哦～"; return; }
+    ans = q.fields.map(f => f.answer);
+  } else {
+    const inp = $("numIn"); vals = [inp.value]; ans = [q.answer];
+    inp.className = "";
+    if (inp.value === ""){ $("fb").textContent = "先填一个答案吧～"; return; }
+  }
+  const allOk = vals.every((v, i) => eq(v, ans[i]));
+  if (allOk){ onCorrect(session.solved ? 0 : (session.wrong === 0 && !session.hint ? 10 : 5)); }
+  else {
+    session.wrong++;
+    if (q.type === "multi") q.fields.forEach((f, i) => { if (!eq(vals[i], f.answer)) $("multiIn"+i).className = "err"; });
+    else $("numIn").className = "err";
+    $("fb").textContent = session.wrong >= 2
+      ? "❌ 再看看提示吧！点下面的 💡 提示 按钮"
+      : "❌ 差一点点，再算一遍～";
+    $("fb").className = "feedback fb-no";
+  }
+}
+
+function onCorrect(coins){
+  session.correct = true;
+  $("fb").innerHTML = "🎉 答对啦！" + (coins > 0 ? " +" + coins + " 🪙" : "");
+  $("fb").className = "feedback fb-ok";
+  const q = curQ();
+  if (q.why){ const w = document.createElement("div"); w.className = "show-block";
+    w.style.cssText = "margin-top:8px;padding:10px 12px;border-radius:10px;background:#effaf1;border:1px dashed var(--green);font-size:13.5px;color:#166534;font-weight:700";
+    w.innerHTML = "💡 " + q.why; $("fb").appendChild(w); }
+  const q2 = curQ();
+  if (q.type === "multi") q2.fields.forEach((f, i) => { const inp = $("multiIn"+i); if (inp){ inp.className = "ok"; inp.disabled = true; } });
+  else { const inp = $("numIn"); if (inp){ inp.className = "ok"; inp.disabled = true; } }
+  if (coins > 0) addCoins(coins);
+  $("nextBtn").disabled = false;
+  burst(18);
+  if (state.q === curLevel().qs.length - 1 && !state.done[state.level]) $("nextBtn").textContent = "完成本关 ⭐ →";
+  else $("nextBtn").textContent = "下一题 →";
+}
+
+/* ══════════════════════════════════════════════ */
+/*  关卡推进
+/* ══════════════════════════════════════════════ */
+function onNext(){
+  if ($("nextBtn").disabled) return;
+  const lvLen = curLevel().qs.length;
+  if (state.q < lvLen - 1){ state.q++; renderQuestion(); renderTabs(); return; }
+  /* 本关完成 */
+  const first = !state.done[state.level];
+  if (first){ state.done[state.level] = true; addCoins(20); }
+  renderTopbar(); burst(40);
+  const isLast = state.level === LEVELS.length - 1;
+  if (isLast){ $("award").classList.add("show");
+    showToast("🏆 全部通关！追及大师！"); save(); return; }
+  showToast("⭐ 第 " + (state.level+1) + " 关通过！" + (first ? "+20 🪙" : ""));
+  state.level++; state.q = 0; save(); renderAll();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* ══════════════════════════════════════════════ */
+/*  追赶动画（SVG 跑道）
+/* ══════════════════════════════════════════════ */
+const RACE = { anim:null, t:-1, playing:false, raf:0, last:0, caught:false,
+  trackLen:1, x0:50, x1:590, roadY:172 };
+
+function setupRace(anim){
+  const R = RACE; R.anim = anim; R.t = anim.preWalk ? -(anim.gap/anim.slow) : 0;
+  R.playing = false; R.caught = false; cancelAnimationFrame(R.raf);
+
+  const spread = anim.mode === "pullaway" ? anim.tMax * (anim.fast - anim.slow)
+               : anim.preWalk ? anim.gap + anim.slow * anim.tMax
+               : anim.gap + anim.slow * anim.tMax; // offset 模式
+  const catchPos = anim.mode === "pullaway" ? anim.fast * anim.tMax
+                 : anim.gap + anim.slow * (anim.gap / (anim.fast - anim.slow)); // offset/preWalk 追上点
+  R.trackLen = Math.ceil(Math.max(spread, catchPos) + 2);
+
+  const svg = $("race"); svg.innerHTML = "";
+  const X = km => R.x0 + (km / R.trackLen) * (R.x1 - R.x0);
+
+  /* 天空装饰 */
+  svg.appendChild(el("text", { x:596, y:40, "font-size":26, "text-anchor":"end" })).textContent = "☀️";
+  svg.appendChild(el("text", { x:60, y:36, "font-size":24 })).textContent = "☁️";
+  svg.appendChild(el("text", { x:300, y:30, "font-size":18 })).textContent = "☁️";
+
+  /* 马路 */
+  svg.appendChild(el("rect", { x:R.x0-16, y:R.roadY+14, width:R.x1-R.x0+32, height:30,
+    rx:15, fill:"#8ab6d6" }));
+  const lane = el("line", { x1:R.x0-16, y1:R.roadY+29, x2:R.x1+16, y2:R.roadY+29,
+    stroke:"#fff", "stroke-width":3, "stroke-dasharray":"18 14" });
+  svg.appendChild(lane);
+
+  /* 里程标记 */
+  let step = 1;
+  for (const s of [1,2,2.5,5,10,20,25,50,100,200,250,500]){ step = s; if (R.trackLen/s <= 9) break; }
+  for (let m = 0; m <= R.trackLen; m += step){
+    const x = X(m);
+    svg.appendChild(el("line", { x1:x, y1:R.roadY-6, x2:x, y2:R.roadY+12, stroke:"#5f8fb0", "stroke-width":2 }));
+    const tx = el("text", { x:x, y:R.roadY-12, "font-size":10.5, fill:"#38678f", "text-anchor":"middle", "font-weight":"700" });
+    tx.textContent = m; svg.appendChild(tx);
+  }
+
+  /* A 地旗帜 + 方向 */
+  svg.appendChild(el("text", { x:X(0), y:R.roadY-26, "font-size":22, "text-anchor":"middle" })).textContent = "🚩";
+  const tl = el("text", { x:X(0), y:R.roadY+66, "font-size":12, fill:"#38678f", "text-anchor":"middle", "font-weight":"800" });
+  tl.textContent = "A 地"; svg.appendChild(tl);
+  const arrow = el("text", { x:R.x1+18, y:R.roadY+38, "font-size":15, fill:"#38678f", "font-weight":"800" });
+  arrow.textContent = "往 B 地 →"; svg.appendChild(arrow);
+
+  /* 先走起点旗（preWalk 或 offset 模式：慢者从差距处起跑） */
+  if (anim.preWalk || anim.offset){
+    svg.appendChild(el("text", { x:X(anim.gap), y:R.roadY-46, "font-size":18, "text-anchor":"middle" })).textContent = "🚩";
+    const names = anim.names || { fast:"甲", slow:"乙" };
+    const ud = anim.unitDist || "千米";
+    const fl = el("text", { x:X(anim.gap), y:R.roadY+66, "font-size":11, fill:"#b45309", "text-anchor":"middle", "font-weight":"800" });
+    fl.textContent = names.slow + "出发处（+" + fmt(anim.gap) + "）"; svg.appendChild(fl);
+  }
+
+  /* 跑者 */
+  const skin = anim.skin || { fast:"🏃", slow:"🚶" };
+  const names = anim.names || { fast:"甲", slow:"乙" };
+  R.fastG = mkRunner(svg, skin.fast, names.fast, "#2563eb");
+  R.slowG = mkRunner(svg, skin.slow, names.slow, "#b45309");
+
+  /* 控制按钮 */
+  const ctrl = $("stageCtrl"); ctrl.innerHTML = "";
+  const play = document.createElement("button");
+  play.className = "act btn-play"; play.id = "playBtn";
+  play.textContent = "▶ 播放追赶动画"; play.onclick = togglePlay;
+  const rst = document.createElement("button");
+  rst.className = "act btn-sol"; rst.textContent = "↺ 重来";
+  rst.onclick = () => { R.t = anim.preWalk ? -(anim.gap/anim.slow) : 0; R.caught = false;
+    R.playing = false; cancelAnimationFrame(R.raf); drawFrame(); play.textContent = "▶ 播放追赶动画"; };
+  ctrl.appendChild(play); ctrl.appendChild(rst);
+  drawFrame();
+}
+
+function mkRunner(svg, emoji, name, color){
+  const g = el("g", { });
+  const label = el("text", { x:0, y:-46, "font-size":13, "font-weight":"800", fill:color, "text-anchor":"middle" });
+  label.textContent = name; g.appendChild(label);
+  const body = el("text", { x:0, y:0, "font-size":32, "text-anchor":"middle" });
+  body.textContent = emoji; g.appendChild(body);
+  const shadow = el("ellipse", { cx:0, cy:16, rx:15, ry:4, fill:"rgba(30,60,90,.18)" });
+  g.appendChild(shadow);
+  svg.appendChild(g); return g;
+}
+
+const fmt = v => Math.abs(v - Math.round(v)) < 1e-9 ? String(Math.round(v)) : v.toFixed(1);
+
+function togglePlay(){
+  const R = RACE; if (R.caught) return;
+  R.playing = !R.playing;
+  $("playBtn").textContent = R.playing ? "⏸ 暂停" : "▶ 继续";
+  if (R.playing){ R.last = 0; R.raf = requestAnimationFrame(tickRace); }
+  else cancelAnimationFrame(R.raf);
+}
+
+function tickRace(ts){
+  const R = RACE, a = R.anim;
+  if (!R.last) R.last = ts;
+  const dt = Math.min((ts - R.last)/1000, 0.1); R.last = ts;
+  R.t += dt / 1.4;                     /* 1.4 秒走 1 小时 */
+  if (a.mode === "pullaway"){
+    if (R.t >= a.tMax){ R.t = a.tMax; R.playing = false; drawFrame(); return; }
+  } else {
+    const tc = a.gap / (a.fast - a.slow);
+    if (R.t >= tc){ R.t = tc; R.caught = true; R.playing = false;
+      drawFrame(); burst(14); return; }
+    if (R.t >= a.tMax){ R.t = a.tMax; R.playing = false; drawFrame(); return; }
+  }
+  drawFrame();
+  if (R.playing) R.raf = requestAnimationFrame(tickRace);
+}
+
+function drawFrame(){
+  const R = RACE, a = R.anim;
+  const names = a.names || { fast:"甲", slow:"乙" };
+  const ud = a.unitDist || "千米";
+  const X = km => R.x0 + (km / R.trackLen) * (R.x1 - R.x0);
+  let slowKm, fastKm, gapNow;
+  if (a.mode === "pullaway"){
+    slowKm = a.slow * R.t; fastKm = a.fast * R.t;
+    gapNow = fastKm - slowKm;
+  } else if (a.preWalk){
+    const pw = a.gap / a.slow;
+    slowKm = R.t < 0 ? a.slow * (R.t + pw) : a.gap + a.slow * R.t;
+    fastKm = R.t <= 0 ? 0 : a.fast * R.t;
+    gapNow = Math.max(0, slowKm - Math.max(0, fastKm));
+  } else {  /* offset：t=0 时慢者已摆好差距 */
+    slowKm = a.gap + a.slow * R.t; fastKm = a.fast * R.t;
+    gapNow = Math.max(0, slowKm - fastKm);
+  }
+  R.slowG.setAttribute("transform", "translate(" + X(slowKm) + "," + R.roadY + ")");
+  R.fastG.setAttribute("transform", "translate(" + X(Math.max(0, fastKm)) + "," + (R.roadY - 34) + ")");
+
+  const ut = a.unitTime || "小时";
+  const tl = $("timeline");
+  if (R.t < 0){
+    tl.innerHTML = "⏳ <b>" + names.slow + "先走中</b>… 已走 " + fmt(slowKm) + " " + ud + "（这就是两人的差距！）";
+  } else if (a.mode === "pullaway"){
+    tl.innerHTML = "⏱ 同时出发 " + fmt(R.t) + " " + ut + " ｜ <b>" + names.fast + "</b>领先 <b>" + fmt(gapNow) + "</b> " + ud +
+      " ｜ 速度差 = " + fmt(a.fast) + " − " + fmt(a.slow) + " = <b>" + fmt(a.fast - a.slow) + "</b> " + ud + "/" + ut;
+  } else if (R.caught){
+    tl.innerHTML = "🎉 <b>追上啦！</b>" + names.fast + "出发后 " + fmt(R.t) + " " + ut +
+      " ｜ 两人都在 " + fmt(a.fast * R.t) + " " + ud + "处（" + names.fast + "走的 = " + names.slow + "先走的 + " + names.slow + "后走的）";
+  } else {
+    tl.innerHTML = "⏱ " + names.fast + "出发后 " + (R.t < 0.05 ? "刚刚（0" : fmt(R.t)) +
+      (R.t < 0.05 ? "）" : " ") + ut + " ｜ 还差 <b>" + fmt(gapNow) + "</b> " + ud + "追上";
+  }
+}
+
+/* ══════════════════════════════════════════════ */
+/*  事件绑定 & 启动
+/* ══════════════════════════════════════════════ */
+$("checkBtn").onclick = checkAnswer;
+$("nextBtn").onclick = onNext;
+$("hintBtn").onclick = () => {
+  session.hint = true;
+  const q = curQ();
+  $("hintBox").innerHTML = "💡 <b>提示：</b>" + q.hint;
+  $("hintBox").classList.add("show-block");
+};
+$("solBtn").onclick = () => {
+  session.solved = true;
+  const q = curQ();
+  $("solBox").innerHTML = "📖 <b>解析：</b><br>" + q.sol;
+  $("solBox").classList.add("show-block");
+  $("nextBtn").disabled = false;                 /* 看完解析可以直接前进（不给金币） */
+  if (state.q === curLevel().qs.length - 1 && !state.done[state.level])
+    $("nextBtn").textContent = "完成本关 ⭐ →";
+};
+$("formulaBtn").onclick = () => $("formulaPanel").classList.toggle("show");
+document.addEventListener("click", e => {
+  if (!e.target.closest("#formulaPanel") && !e.target.closest("#formulaBtn"))
+    $("formulaPanel").classList.remove("show");
+});
+
+/* 恢复进度时校验关卡合法性 */
+if (!levelUnlocked(state.level)) state.level = 0;
+if (state.q >= LEVELS[state.level].qs.length) state.q = 0;
+renderAll();
+</script>
+</body>
+</html>
