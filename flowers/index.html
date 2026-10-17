@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌸 花店大侦探 · 互动数学课堂</title>
+<style>
+  :root{
+    --bg-a:#fdf2f8; --bg-b:#fff5fa; --bg-c:#fefce8;
+    --card:#ffffff; --ink:#4a2033; --sub:#8a5a70;
+    --green:#22c55e; --green-d:#16a34a;
+    --red:#ef4444; --pink:#ec4899; --pink-d:#db2777;
+    --gold:#f59e0b; --purple:#8b5cf6;
+    --shadow:0 8px 24px rgba(200,60,130,.12);
+    --shadow-lg:0 12px 40px rgba(200,60,130,.2);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
+    background:linear-gradient(165deg,var(--bg-a),var(--bg-b) 55%,var(--bg-c));
+    color:var(--ink);min-height:100vh;padding:16px 14px 90px;line-height:1.65;
+  }
+  .wrap{max-width:900px;margin:0 auto}
+
+  header{text-align:center;padding:10px 8px 4px}
+  header h1{font-size:clamp(24px,6vw,36px);letter-spacing:1px;
+    text-shadow:1px 1px 0 #fff,2px 2px 0 #fbcfe8}
+  header .sub{color:var(--sub);font-size:14px;margin-top:4px}
+  .motto{display:inline-block;margin-top:8px;background:#fff;border:2px dashed var(--pink);
+    color:var(--pink-d);font-weight:700;font-size:13px;padding:5px 16px;border-radius:20px;
+    box-shadow:0 3px 10px rgba(236,72,153,.12)}
+
+  .topbar{position:sticky;top:8px;z-index:20;background:rgba(255,255,255,.92);
+    backdrop-filter:blur(8px);border-radius:14px;padding:10px 14px;margin:12px 0;
+    box-shadow:var(--shadow);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .pbar{flex:1;height:15px;background:#f6e3ec;border-radius:20px;overflow:hidden;min-width:120px}
+  .pfill{height:100%;width:0;background:linear-gradient(90deg,var(--green),#7be495);
+    transition:width .5s ease;border-radius:20px}
+  .stat{font-weight:800;font-size:14px;white-space:nowrap}
+  .coins{color:var(--gold)}
+  .stars{color:var(--gold);font-size:16px;letter-spacing:1px}
+
+  .tabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:8px;margin:14px 0}
+  .tab{border:none;cursor:pointer;padding:10px 8px;border-radius:14px;font-size:14px;font-weight:800;
+    background:#fff;color:var(--sub);box-shadow:0 3px 8px rgba(200,60,130,.12);transition:.2s;
+    position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;font-family:inherit}
+  .tab .emoji{font-size:22px;line-height:1.1}
+  .tab .lk{font-size:11px;font-weight:600}
+  .tab:hover{transform:translateY(-2px)}
+  .tab.active{background:var(--pink);color:#fff;transform:translateY(-2px);box-shadow:0 6px 16px rgba(236,72,153,.35)}
+  .tab.locked{opacity:.45;cursor:not-allowed}
+  .tab .badge{position:absolute;top:-7px;right:-4px;background:var(--green);color:#fff;
+    font-size:10px;border-radius:10px;padding:1px 6px;display:none}
+  .tab.done .badge{display:block}
+
+  .card{background:var(--card);border-radius:18px;box-shadow:var(--shadow-lg);
+    padding:20px 18px;margin-bottom:16px;border:1px solid #fce7ef}
+  .card h2{font-size:20px;display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+  .lvl-desc{font-size:13.5px;color:var(--sub);background:#fdf0f6;border-left:4px solid var(--pink);
+    padding:9px 13px;border-radius:8px;margin-bottom:14px}
+
+  .stage{background:linear-gradient(#fdeef6,#fbdcec);border-radius:14px;padding:10px;margin:10px 0;
+    border:2px dashed #f2a9cd;position:relative;overflow:hidden}
+  svg{width:100%;height:auto;display:block;touch-action:manipulation}
+  .stage-ctrl{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+  .timeline{font-size:13px;text-align:center;margin-top:6px;min-height:22px;color:#b03068;font-weight:700}
+
+  button.act{border:none;cursor:pointer;padding:9px 16px;border-radius:11px;font-weight:800;font-size:14px;
+    transition:.15s;box-shadow:0 3px 7px rgba(0,0,0,.12);font-family:inherit}
+  .btn-play{background:var(--pink);color:#fff}
+  .btn-hint{background:#fff3cf;color:#9a7415}
+  .btn-sol{background:#f3eef5;color:#665}
+  .btn-check{background:var(--green);color:#fff}
+  .btn-next{background:var(--pink-d);color:#fff}
+  button.act:active{transform:scale(.94)}
+  button.act:disabled{opacity:.5;cursor:default}
+
+  .q{font-size:16.5px;margin:10px 0;font-weight:600}
+  .q .qno{display:inline-block;background:var(--pink);color:#fff;border-radius:8px;
+    padding:1px 9px;font-size:13px;margin-right:6px;flex:none}
+  .question-row{display:flex;align-items:flex-start;gap:2px}
+  .ans-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0}
+  .ans-row input{font-size:18px;padding:9px 12px;border:2px solid #eccfdd;border-radius:10px;
+    width:110px;text-align:center;font-weight:800;background:#fffbfd;color:var(--ink);font-family:inherit}
+  .ans-row input:focus{outline:none;border-color:var(--pink);box-shadow:0 0 0 3px #fbdfec}
+  .ans-row input.ok{border-color:var(--green);background:#f0fdf4}
+  .ans-row input.err{border-color:var(--red);background:#fef2f2;animation:shake .3s}
+  @keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+  .unit{color:var(--sub);font-weight:700}
+  .feedback{font-size:15px;font-weight:800;min-height:24px;margin-top:2px}
+  .fb-ok{color:var(--green-d)} .fb-no{color:var(--red)}
+  .hintbox,.solbox{display:none;margin-top:10px;padding:12px 14px;border-radius:10px;font-size:14px}
+  .hintbox{background:#fff8e1;border:1px dashed var(--gold)}
+  .hintbox b{color:#b45309}
+  .solbox{background:#f2f8f2;border:1px solid #c9e5c9}
+  .solbox b{color:var(--green-d)}
+  .show-block{display:block!important;animation:pop .25s}
+  @keyframes pop{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+  .fbtn{position:fixed;bottom:18px;right:16px;z-index:40;background:var(--purple);color:#fff;
+    border:none;border-radius:50%;width:56px;height:56px;font-size:22px;cursor:pointer;
+    box-shadow:0 6px 16px rgba(139,92,246,.4);transition:.2s}
+  .fbtn:active{transform:scale(.9)}
+  .fpanel{position:fixed;inset:auto 16px 84px 16px;max-width:520px;margin:0 auto;z-index:41;
+    background:#fff;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.25);padding:16px;
+    display:none;border:2px solid #ddd6fe}
+  .fpanel.show{display:block;animation:pop .25s}
+  .fpanel h3{color:var(--purple);margin-bottom:8px}
+  .fpanel ul{list-style:none}
+  .fpanel li{padding:7px 10px;margin:6px 0;background:#f5f3ff;border-radius:8px;font-size:14px}
+  .fpanel li b{color:var(--purple)}
+
+  .toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.6);
+    background:rgba(60,20,40,.92);color:#fff;padding:20px 32px;border-radius:18px;font-size:24px;
+    font-weight:800;z-index:99;opacity:0;pointer-events:none;transition:.3s;text-align:center;line-height:1.4}
+  .toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  .confetti{position:fixed;inset:0;pointer-events:none;z-index:98}
+  .foot{text-align:center;color:var(--sub);font-size:12.5px;padding:18px 0}
+
+  .award{display:none;text-align:center;margin-top:14px}
+  .award.show{display:block;animation:pop .4s}
+  .award h3{font-size:22px;color:var(--gold);margin:8px 0}
+  .award .medal{font-size:54px;animation:spin-in 1s ease}
+  @keyframes spin-in{from{transform:rotate(-180deg) scale(0)}to{transform:rotate(0) scale(1)}}
+  .award p{color:var(--sub);font-size:14px}
+
+  @media (max-width:520px){
+    .ans-row input{width:88px}
+    .fpanel{inset:auto 10px 84px 10px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🌸 花店大侦探</h1>
+    <p class="sub">一束花便宜还是一枝一枝买便宜？当 detective 侦探，把答案查出来！</p>
+    <span class="motto">每闯过一关得一颗 ⭐，全部通关赢大奖章！</span>
+  </header>
+
+  <div class="topbar">
+    <span class="stat coins">🪙 <span id="coins">0</span></span>
+    <div class="pbar"><div class="pfill" id="pfill"></div></div>
+    <span class="stat"><span id="doneN">0</span>/<span id="totN">4</span> 关</span>
+    <span class="stars" id="starRow"></span>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="card" id="mainCard">
+    <h2 id="lvlTitle" class="question-row"></h2>
+    <div class="lvl-desc" id="lvlDesc"></div>
+
+    <div class="stage">
+      <svg id="stage" viewBox="0 0 640 260" aria-label="花店动画"></svg>
+      <div class="stage-ctrl" id="stageCtrl"></div>
+      <div class="timeline" id="timeline"></div>
+    </div>
+
+    <div class="q question-row" id="qText"></div>
+    <div class="ans-row" id="ansRow"></div>
+    <div class="feedback" id="fb"></div>
+    <div class="hintbox" id="hintBox"></div>
+    <div class="solbox" id="solBox"></div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:8px;flex-wrap:wrap">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="act btn-hint" id="hintBtn">💡 提示</button>
+        <button class="act btn-sol" id="solBtn">📖 看解析</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="act btn-check" id="checkBtn">✔ 检查</button>
+        <button class="act btn-next" id="nextBtn">下一题 →</button>
+      </div>
+    </div>
+
+    <div class="award" id="award">
+      <div class="medal">🏅</div>
+      <h3>比价小侦探勋章！</h3>
+      <p>单价 = 总价 ÷ 数量 &nbsp;→&nbsp; 30 ÷ 6 = 5（元）</p>
+      <p>便宜多少 = 单买价 − 束买单价 &nbsp;→&nbsp; 8 − 5 = 3（元）</p>
+      <button class="act btn-sol" onclick="location.reload()" style="margin-top:8px">↺ 重新挑战</button>
+    </div>
+  </div>
+
+  <div class="foot">小羽互动课堂 · 比价问题 · 认知负荷优化版</div>
+</div>
+
+<button class="fbtn" id="formulaBtn" title="公式锦囊">🎒</button>
+<div class="fpanel" id="formulaPanel">
+  <h3>🎒 公式锦囊（随时翻看）</h3>
+  <ul>
+    <li>💐 <b>单价 = 总价 ÷ 数量</b>（一束花总钱数 ÷ 枝数）</li>
+    <li>💷 <b>便宜多少 = 贵的 − 便宜的</b>（单买价 − 束买单价）</li>
+    <li>🧮 比价三步法：①找两个价 ②都用「每枝多少元」表示 ③相减</li>
+    <li>🕵️ 侦探眼光：故事怎么换（铅笔、苹果、彩笔），找「总价÷数量」三步不变！</li>
+  </ul>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="confetti" id="confetti"></div>
+
+<script>
+"use strict";
+/* ══════════════════════════════════════════════════════════
+   花店大侦探 · 比价问题课程数据
+   认知负荷：关1读题热身 → 关2算单价 → 关3比便宜 → 关4原题+变式
+   交替实例：花→铅笔→尺子→苹果→彩笔，深层结构（总价÷数量=单价，再相减）不变
+   ══════════════════════════════════════════════════════════ */
+
+const LEVELS = [
+  /* ---------- 关 1：读题热身（找信息，回掺乘法旧知识） ---------- */
+  {
+    id: `L1`, emoji: `🔍`, title: `第一关 · 侦探的眼睛`,
+    desc: `目标：先把题目里的数字都找出来。当侦探，第一步是搜集线索！`,
+    anim: { mode: `bundle`, flowers: 6, bundlePrice: 30, singlePrice: 8 },
+    qs: [
+      {
+        text: `花店里，一束花 30 元，这束花里共有 6 枝。如果一枝一枝单独买，每枝要 8 元。题目里，买一束花要多少元？`,
+        type: `number`, unit: `元`, answer: 30,
+        hint: `答案就藏在题目第一句里：一束花（ ）元。把数字用侦探笔圈出来！`,
+        sol: `题目直接告诉我们：<b>一束花 30 元</b>。这是「总价」——买一整束要付的钱。`,
+        why: `「总价」= 买一整份东西要付的钱。线索① 30 元。`
+      },
+      {
+        text: `继续搜线索！单买一枝花要 8 元，小明想单独买 2 枝送给妈妈。他要付多少元？`,
+        type: `number`, unit: `元`, answer: 16,
+        hint: `买 2 枝，每枝 8 元：8 × 2 = ?`,
+        sol: `8 × 2 = <b>16（元）</b>。买几枝就乘几，这是我们学过的本领！`,
+        why: `单买总价 = 单价 × 数量。线索② 每枝 8 元。`,
+        anim: { mode: `singles`, flowers: 2, bundlePrice: 30, singlePrice: 8 }
+      },
+      {
+        text: `如果一枝一枝单独买 6 枝（和一束一样多），一共要多少元？`,
+        type: `number`, unit: `元`, answer: 48,
+        hint: `每枝 8 元，买 6 枝：8 × 6 = ? 算完这个数，再和一束的 30 元比一比！`,
+        sol: `8 × 6 = <b>48（元）</b>。对比：同样 6 枝花，一束才 30 元，单买要 48 元——买一束整体便宜了 18 元！`,
+        why: `单买 6 枝 48 元 ＞ 一束 30 元。整束买更划算！但题目问的是「每一枝」便宜多少——下一关来算！`,
+        anim: { mode: `singles`, flowers: 6, bundlePrice: 30, singlePrice: 8 }
+      }
+    ]
+  },
+
+  /* ---------- 关 2：算单价（总价 ÷ 数量） ---------- */
+  {
+    id: `L2`, emoji: `💐`, title: `第二关 · 一束花的隐藏单价`,
+    desc: `目标：算出买一束时，平均每枝花相当于多少钱。法宝：总价 ÷ 数量 = 单价。`,
+    anim: { mode: `split`, flowers: 6, bundlePrice: 30, singlePrice: 8 },
+    qs: [
+      {
+        text: `一束花 30 元，共 6 枝。把 30 元平均分给 6 枝花，每枝花「背着」多少钱？用什么算式？`,
+        type: `choice`,
+        choices: [`30 × 6`, `30 ÷ 6`, `30 − 6`],
+        answer: 1,
+        hint: `平均分——把一个总数平均分成几份，用除法。就像 12 颗糖平均分给 3 人用 12 ÷ 3。`,
+        sol: `30 ÷ 6 = <b>5（元）</b>。把 30 元平均摊到 6 枝花上，每枝相当于 <b>5 元</b>。这就是「束买的单价」！`,
+        why: `单价 = 总价 ÷ 数量。每枝花头顶上都写着 5 元！点 ▶ 看金币分配动画。`
+      },
+      {
+        text: `一束花 30 元共 6 枝。买一束时，平均每枝花相当于多少元？直接算！`,
+        type: `number`, unit: `元`, answer: 5,
+        hint: `单价 = 总价 ÷ 数量 = 30 ÷ 6。`,
+        sol: `30 ÷ 6 = <b>5（元）</b>。同样一枝花：单买要 8 元，买一束平均每枝才 5 元！`,
+        why: `$5 元/枝$ 是我们侦探查到的关键情报！`,
+        anim: { mode: `split`, flowers: 6, bundlePrice: 30, singlePrice: 8 }
+      },
+      {
+        text: `【换个故事】文具店：一盒铅笔 18 元，盒里共 3 支。买一盒时，平均每支铅笔相当于多少元？`,
+        type: `number`, unit: `元`, answer: 6,
+        hint: `同类题！总价 18，数量 3：18 ÷ 3。故事换了皮（花→铅笔），方法不变。`,
+        sol: `18 ÷ 3 = <b>6（元）</b>。无论花还是铅笔，平均分就用「总价 ÷ 数量」。`,
+        why: `交替实例：花→铅笔，「总价 ÷ 数量 = 单价」永远灵验。`,
+        anim: { mode: `split`, flowers: 3, bundlePrice: 18, singlePrice: 7, item: `-pencil`, name: `铅笔` }
+      },
+      {
+        text: `【再换一个】尺子大礼包 24 元，里面有 4 把尺子。买礼包时，平均每把尺子相当于多少元？`,
+        type: `number`, unit: `元`, answer: 6,
+        hint: `总价 24，数量 4：24 ÷ 4。`,
+        sol: `24 ÷ 4 = <b>6（元）</b>。`,
+        why: `数字变了，法宝不变。你已经会算任何「礼包」的隐藏单价了！`,
+        anim: { mode: `split`, flowers: 4, bundlePrice: 24, singlePrice: 9, item: `📏`, name: `尺子` }
+      }
+    ]
+  },
+
+  /* ---------- 关 3：比便宜（单价相减） ---------- */
+  {
+    id: `L3`, emoji: `⚖️`, title: `第三关 · 天平比一比`,
+    desc: `目标：把两个「每枝多少钱」放上天平，相减！便宜多少 = 单买价 − 束买单价。`,
+    anim: { mode: `compare`, flowers: 6, bundlePrice: 30, singlePrice: 8 },
+    qs: [
+      {
+        text: `现在情报齐了：单买一枝 8 元，买一束平均每枝 5 元。买一束花，每枝比单买便宜多少元？`,
+        type: `number`, unit: `元`, answer: 3,
+        hint: `便宜多少 = 贵的 − 便宜的 = 8 − 5。想象天平：8 元那头沉，5 元那头轻。`,
+        sol: `8 − 5 = <b>3（元）</b>。同样一枝花，买一束就省下 3 元！`,
+        why: `点 ▶ 看天平动画：8 和 5 一比，差 3 元！`,
+        anim: { mode: `compare`, flowers: 6, bundlePrice: 30, singlePrice: 8 }
+      },
+      {
+        text: `把整道题连成一个算式：每枝便宜 = 单买价 − 每枝平均价。下面哪个算式是对的？`,
+        type: `choice`,
+        choices: [`8 − 30`, `8 − 30 ÷ 6`, `30 ÷ 6 − 8`],
+        answer: 1,
+        hint: `先算出束买的每枝价（30 ÷ 6 = 5），再用单买价减它：8 − 5。合起来就是 8 − 30 ÷ 6。`,
+        sol: `<b>8 − 30 ÷ 6</b> = 8 − 5 = 3（元）。注意：先算除法（30÷6），再算减法，这是带括号的两步题！`,
+        why: `一个算式装下两个法宝：先除后减（除法优先）。`
+      },
+      {
+        text: `【换个故事】超市：一袋苹果 20 元共 5 个；一个一个买，每个 6 元。买一袋的话，每个苹果比单买便宜多少元？`,
+        type: `number`, unit: `元`, answer: 2,
+        hint: `两步走：①袋装单价 = 20 ÷ 5 = ? ②便宜 = 6 − 那个数。`,
+        sol: `①20 ÷ 5 = 4（元）②6 − 4 = <b>2（元）</b>。`,
+        why: `交替实例：花→苹果，两步法（先除后减）稳稳的。`,
+        anim: { mode: `compare`, flowers: 5, bundlePrice: 20, singlePrice: 6, item: `🍎`, name: `苹果` }
+      }
+    ]
+  },
+
+  /* ---------- 关 4：原题完整挑战 + 变式 ---------- */
+  {
+    id: `L4`, emoji: `🏅`, title: `第四关 · 完整挑战（终极题）+ 变式`,
+    desc: `见证侦探实力：把两步合成完整解题！之后还有变式守关。`,
+    anim: { mode: `both`, flowers: 6, bundlePrice: 30, singlePrice: 8 },
+    qs: [
+      {
+        text: `【原题挑战】一束花 30 元，共有 6 枝。一枝花单独买的话 8 元。买一束花，每枝比单买便宜多少钱？（两步都要答对！）`,
+        type: `multi`,
+        fields: [{label:`买一束时平均每枝多少元`, unit:`元`, answer:5},
+                 {label:`每枝比单买便宜多少元`, unit:`元`, answer:3}],
+        answer: null,
+        hint: `第 1 步：单价 = 30 ÷ 6。第 2 步：便宜 = 8 − 第 1 步的得数。`,
+        sol: `①束买单价 = 30 ÷ 6 = <b>5（元）</b><br>②每枝便宜 = 8 − 5 = <b>3（元）</b><br>检验：单买 6 枝要 8×6=48 元，整束 30 元，共省 48−30=18 元；每枝省 18÷6=3 元 ✓`,
+        why: `检验神技：总省的钱 ÷ 枝数 = 每枝省的钱！18 ÷ 6 = 3 ✓`,
+        anim: { mode: `both`, flowers: 6, bundlePrice: 30, singlePrice: 8 }
+      },
+      {
+        text: `【变式 1・回掺乘法】还是这家花店：买一整束（30 元）比一枝一枝单买 6 枝（8 元一枝），总共便宜多少元？`,
+        type: `number`, unit: `元`, answer: 18,
+        hint: `单买 6 枝要 8×6=48 元；一束只 30 元。48 − 30 = ?`,
+        sol: `8 × 6 = 48（元），48 − 30 = <b>18（元）</b>。也可以用新本领：每枝便宜 3 元 × 6 枝 = 18 元。两条路答案一样！`,
+        why: `两条路通一个答案：48−30=18，3×6=18。这就是数学的神奇！`,
+        anim: { mode: `singles`, flowers: 6, bundlePrice: 30, singlePrice: 8 }
+      },
+      {
+        text: `【变式 2・换数字】花店进了一批新花：一束 42 元共 6 枝，单买一枝 9 元。买一束每枝比单买便宜多少元？`,
+        type: `number`, unit: `元`, answer: 2,
+        hint: `①42 ÷ 6 = ? ②9 − 那个数。`,
+        sol: `42 ÷ 6 = 7（元）；9 − 7 = <b>2（元）</b>。`,
+        why: `数字换了，两步法纹丝不动。`,
+        anim: { mode: `compare`, flowers: 6, bundlePrice: 42, singlePrice: 9 }
+      },
+      {
+        text: `【变式 3・终极守关】文具店：一盒彩笔 36 元，盒里共 12 支；单买一支要 4 元。买一盒的话，每支比单买便宜多少元？总共便宜多少元？（两问都答对！）`,
+        type: `multi`,
+        fields: [{label:`每支便宜多少元`, unit:`元`, answer:1},
+                 {label:`买一盒总共便宜多少元`, unit:`元`, answer:12}],
+        answer: null,
+        hint: `第 1 问：①盒装单价 = 36 ÷ 12 ②4 − 它。第 2 问：每支便宜的 × 12 支（或 4×12 − 36）。`,
+        sol: `①36 ÷ 12 = 3（元）②每支便宜 = 4 − 3 = <b>1（元）</b><br>③总共便宜 = 1 × 12 = <b>12（元）</b> 检验：4 × 12 = 48，48 − 36 = 12 ✓`,
+        why: `终极合体：单价 → 每份便宜 → 总共便宜。你已经是有证书的比价侦探了！`,
+        anim: { mode: `compare`, flowers: 12, bundlePrice: 36, singlePrice: 4, item: `🖍️`, name: `彩笔` }
+      }
+    ]
+  }
+];
+
+/* ══════════════════════════════════════════════ */
+/*  状态
+/* ══════════════════════════════════════════════ */
+let state = { level: 0, q: 0, coins: 0, done: [] };
+try { const s = JSON.parse(localStorage.getItem("flowerGameV1")); if (s && s.done) state = s; } catch(e){}
+
+const $ = id => document.getElementById(id);
+const UNIT = { hour:"小时", km:"千米", 元:"元" };
+const unitLabel = u => UNIT[u] || u || "";
+const SVGNS = "http://www.w3.org/2000/svg";
+function el(tag, attrs){ const e = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+
+function save(){ try{ localStorage.setItem("flowerGameV1", JSON.stringify(state)); }catch(e){} }
+function addCoins(n){ state.coins += n; $("coins").textContent = state.coins; save(); }
+
+function showToast(txt){ const t = $("toast"); t.textContent = txt; t.classList.add("show");
+  clearTimeout(showToast._h); showToast._h = setTimeout(()=>t.classList.remove("show"), 1600); }
+
+(function(){ const st = document.createElement("style"); st.textContent =
+  ".confetti i{position:absolute;top:-12px;border-radius:2px;animation:fall 2.4s linear forwards}" +
+  "@keyframes fall{to{transform:translateY(108vh) rotate(720deg)}}";
+  document.head.appendChild(st); })();
+const COLORS = ["#f59e0b","#22c55e","#ec4899","#3b82f6","#8b5cf6","#ef4444"];
+function burst(n){
+  const box = $("confetti");
+  for (let i = 0; i < n; i++){
+    const p = document.createElement("i");
+    p.style.left = Math.random()*100 + "vw";
+    p.style.background = COLORS[i % COLORS.length];
+    p.style.width = 6 + Math.random()*6 + "px";
+    p.style.height = 10 + Math.random()*8 + "px";
+    p.style.animationDelay = Math.random()*0.4 + "s";
+    p.style.animationDuration = 1.8 + Math.random()*1.2 + "s";
+    box.appendChild(p);
+    setTimeout(()=>p.remove(), 3600);
+  }
+}
+
+function curLevel(){ return LEVELS[state.level]; }
+function curQ(){ return curLevel().qs[state.q]; }
+function animOf(q){ return q.anim || curLevel().anim; }
+function levelUnlocked(i){ return i === 0 || !!state.done[i-1]; }
+function totalDone(){ return state.done.filter(Boolean).length; }
+
+/* ══════════════════════════════════════════════ */
+/*  渲染
+/* ══════════════════════════════════════════════ */
+function renderTabs(){
+  const box = $("tabs"); box.innerHTML = "";
+  LEVELS.forEach((lv, i) => {
+    const b = document.createElement("button");
+    b.className = "tab" + (i === state.level ? " active" : "") +
+      (levelUnlocked(i) ? "" : " locked") + (state.done[i] ? " done" : "");
+    b.innerHTML = '<span class="emoji">' + lv.emoji + "</span>" +
+      '<span class="lk">' + (i+1) + " · " + lv.title.replace(/^第.+关 · /, "") + "</span>" +
+      '<span class="badge">✓</span>';
+    if (levelUnlocked(i)) b.onclick = () => { state.level = i; state.q = 0; renderAll(); };
+    box.appendChild(b);
+  });
+}
+
+function renderTopbar(){
+  $("coins").textContent = state.coins;
+  $("doneN").textContent = totalDone();
+  $("totN").textContent = LEVELS.length;
+  $("pfill").style.width = (totalDone()/LEVELS.length*100) + "%";
+  $("starRow").textContent = state.done.map(()=> "⭐").join("");
+}
+
+function renderQuestion(){
+  const q = curQ();
+  $("lvlTitle").innerHTML = curLevel().emoji + " " + curLevel().title;
+  $("lvlDesc").innerHTML = curLevel().desc;
+  $("qText").innerHTML = '<span class="qno">第 ' + (state.q+1) + " / " + curLevel().qs.length + " 题</span>" +
+    "<span>" + q.text + "</span>";
+  $("fb").textContent = ""; $("fb").className = "feedback";
+  $("hintBox").className = "hintbox"; $("solBox").className = "solbox";
+  $("nextBtn").disabled = true;
+
+  const row = $("ansRow"); row.innerHTML = "";
+  session = { correct:false, wrong:0, hint:false, solved:false };
+
+  if (q.type === "choice"){
+    $("checkBtn").style.display = "none";
+    q.choices.forEach((c, i) => {
+      const b = document.createElement("button");
+      b.className = "act btn-sol"; b.textContent = c; b.style.fontSize = "15px";
+      b.onclick = () => {
+        if (session.correct) return;
+        if (i === q.answer){ b.classList.remove("btn-sol"); b.classList.add("btn-check");
+          onCorrect(session.wrong === 0 && !session.hint ? 10 : 5);
+        } else { b.classList.remove("btn-sol"); b.classList.add("btn-hint");
+          b.style.textDecoration = "line-through"; b.disabled = true; session.wrong++;
+          $("fb").textContent = "❌ 不对哦，再想想～"; $("fb").className = "feedback fb-no"; }
+      };
+      row.appendChild(b);
+    });
+  } else if (q.type === "multi"){
+    $("checkBtn").style.display = "";
+    q.fields.forEach((f, i) => {
+      const wrap = document.createElement("label");
+      wrap.style.cssText = "display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--sub);font-weight:700";
+      wrap.innerHTML = "<span>" + (i+1) + ". " + f.label + "（" + unitLabel(f.unit) + "）</span>";
+      const inp = document.createElement("input");
+      inp.type = "number"; inp.step = "any"; inp.id = "multiIn" + i;
+      inp.onkeydown = e => { if (e.key === "Enter") checkAnswer(); };
+      wrap.appendChild(inp); row.appendChild(wrap);
+    });
+  } else {
+    $("checkBtn").style.display = "";
+    const inp = document.createElement("input");
+    inp.type = "number"; inp.step = "any"; inp.id = "numIn";
+    inp.onkeydown = e => { if (e.key === "Enter") checkAnswer(); };
+    row.appendChild(inp);
+    const u = document.createElement("span"); u.className = "unit"; u.textContent = unitLabel(q.unit);
+    row.appendChild(u);
+    setTimeout(() => inp.focus(), 100);
+  }
+  setupStage(animOf(q));
+}
+
+function renderAll(){ renderTabs(); renderTopbar(); renderQuestion(); }
+
+/* ══════════════════════════════════════════════ */
+/*  判分
+/* ══════════════════════════════════════════════ */
+let session = { correct:false, wrong:0, hint:false, solved:false };
+const eq = (a, b) => Math.abs(parseFloat(a) - b) < 1e-6;
+
+function checkAnswer(){
+  if (session.correct) return;
+  const q = curQ();
+  let vals = [], ans = [];
+  if (q.type === "multi"){
+    let allFilled = true;
+    q.fields.forEach((f, i) => {
+      const inp = $("multiIn" + i); vals.push(inp.value);
+      if (inp.value === "") allFilled = false;
+      inp.className = "";
+    });
+    if (!allFilled){ $("fb").textContent = "先把两个空都填好哦～"; return; }
+    ans = q.fields.map(f => f.answer);
+  } else {
+    const inp = $("numIn"); vals = [inp.value]; ans = [q.answer];
+    inp.className = "";
+    if (inp.value === ""){ $("fb").textContent = "先填一个答案吧～"; return; }
+  }
+  const allOk = vals.every((v, i) => eq(v, ans[i]));
+  if (allOk){ onCorrect(session.solved ? 0 : (session.wrong === 0 && !session.hint ? 10 : 5)); }
+  else {
+    session.wrong++;
+    if (q.type === "multi") q.fields.forEach((f, i) => { if (!eq(vals[i], f.answer)) $("multiIn"+i).className = "err"; });
+    else $("numIn").className = "err";
+    $("fb").textContent = session.wrong >= 2
+      ? "❌ 再看看提示吧！点下面的 💡 提示 按钮"
+      : "❌ 差一点点，再算一遍～";
+    $("fb").className = "feedback fb-no";
+  }
+}
+
+function onCorrect(coins){
+  session.correct = true;
+  $("fb").innerHTML = "🎉 答对啦！" + (coins > 0 ? " +" + coins + " 🪙" : "");
+  $("fb").className = "feedback fb-ok";
+  const q = curQ();
+  if (q.why){
+    const w = document.createElement("div");
+    w.style.cssText = "margin-top:8px;padding:10px 12px;border-radius:10px;background:#effaf1;border:1px dashed var(--green);font-size:13.5px;color:#166534;font-weight:700";
+    w.innerHTML = "💡 " + q.why; $("fb").appendChild(w);
+  }
+  if (q.type === "multi") q.fields.forEach((f, i) => { const inp = $("multiIn"+i); if (inp){ inp.className = "ok"; inp.disabled = true; } });
+  else { const inp = $("numIn"); if (inp){ inp.className = "ok"; inp.disabled = true; } }
+  if (coins > 0) addCoins(coins);
+  $("nextBtn").disabled = false;
+  burst(18);
+  if (state.q === curLevel().qs.length - 1 && !state.done[state.level]) $("nextBtn").textContent = "完成本关 ⭐ →";
+  else $("nextBtn").textContent = "下一题 →";
+}
+
+function onNext(){
+  if ($("nextBtn").disabled) return;
+  const lvLen = curLevel().qs.length;
+  if (state.q < lvLen - 1){ state.q++; renderQuestion(); renderTabs(); return; }
+  const first = !state.done[state.level];
+  if (first){ state.done[state.level] = true; addCoins(20); }
+  renderTopbar(); burst(40);
+  const isLast = state.level === LEVELS.length - 1;
+  if (isLast){ $("award").classList.add("show");
+    showToast("🏅 全部通关！比价大侦探！"); save(); return; }
+  showToast("⭐ 第 " + (state.level+1) + " 关通过！" + (first ? "+20 🪙" : ""));
+  state.level++; state.q = 0; save(); renderAll();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* ══════════════════════════════════════════════ */
+/*  花店动画（SVG）
+/*  mode: bundle 束花静态 | singles 单买排列 | split 金币分配 | compare 天平比价 | both 分配+比价
+/* ══════════════════════════════════════════════ */
+const STG = { anim:null, t:0, playing:false, raf:0, last:0 };
+
+function setupStage(anim){
+  const S = STG; S.anim = anim; S.t = 0; S.playing = false; cancelAnimationFrame(S.raf);
+  const svg = $("stage"); svg.innerHTML = "";
+  const item = anim.item || "🌸";
+  const name = anim.name || "花";
+  const perFlower = anim.bundlePrice / anim.flowers;
+
+  /* 装饰 */
+  svg.appendChild(el("text", { x:600, y:38, "font-size":24, "text-anchor":"end" })).textContent = "☁️";
+  svg.appendChild(el("text", { x:36, y:34, "font-size":22 })).textContent = "☀️";
+
+  /* 分数上限保护：花朵太多时缩小 */
+  const n = Math.min(anim.flowers, 12);
+  const spacing = 82;
+  const totalW = (n - 1) * spacing;
+  const x0 = 320 - totalW / 2;
+
+  /* 商品区底座 */
+  const shelf = el("rect", { x:20, y:168, width:600, height:56, rx:16, fill:"#f7d6e6" });
+  svg.appendChild(shelf);
+
+  /* 摆花朵 */
+  for (let i = 0; i < n; i++){
+    const x = x0 + i * spacing;
+    const f = el("text", { x:x, y:150, "font-size":34, "text-anchor":"middle", class:"flower-" + i });
+    f.textContent = item.replace("-pencil", "✏️");
+    svg.appendChild(f);
+    /* 硬币堆容器（split 模式显示） */
+    for (let c = 0; c < 6; c++){
+      const coin = el("circle", { cx:x, cy:172, r:0, fill:"#f59e0b", stroke:"#b45309", "stroke-width":1.5, class:"coin-" + i + "-" + c, opacity:0 });
+      svg.appendChild(coin);
+    }
+    /* 每枝价格标签 */
+    const tag = el("text", { x:x, y:236, "font-size":15, "font-weight":"800", fill:anim.mode === "singles" ? "#b03068" : "#16794a", "text-anchor":"middle", class:"tag-" + i, opacity:0 });
+    tag.textContent = anim.mode === "singles" ? (anim.singlePrice + "元") : (perFlower + "元");
+    svg.appendChild(tag);
+  }
+
+  /* 束花价格牌 */
+  const board = el("g", {});
+  const bb = el("rect", { x:264, y:12, width:112, height:40, rx:10, fill:"#fff", stroke:"#ec4899", "stroke-width":2.5 });
+  board.appendChild(bb);
+  const bt = el("text", { x:320, y:39, "font-size":19, "font-weight":"800", fill:"#db2777", "text-anchor":"middle" });
+  bt.textContent = anim.bundlePrice + " 元" + (anim.mode === "singles" ? "" : "·一束");
+  board.appendChild(bt);
+  svg.appendChild(board);
+
+  /* 天平（compare/both 模式） */
+  if (anim.mode === "compare" || anim.mode === "both"){
+    const g = el("g", { class:"scale", opacity:0 });
+    const pillar = el("rect", { x:316, y:60, width:8, height:60, rx:4, fill:"#8a5a70" });
+    g.appendChild(pillar);
+    const beam = el("rect", { x:120, y:56, width:400, height:8, rx:4, fill:"#8a5a70" });
+    g.appendChild(beam);
+    const left = el("text", { x:130, y:46, "font-size":16, "font-weight":"800", fill:"#b03068", "text-anchor":"middle" });
+    left.textContent = "单买 " + anim.singlePrice + " 元";
+    g.appendChild(left);
+    const right = el("text", { x:500, y:46, "font-size":16, "font-weight":"800", fill:"#16794a", "text-anchor":"middle" });
+    right.textContent = "买一束 " + perFlower + " 元";
+    g.appendChild(right);
+    /* 便宜气泡 */
+    const chip = el("rect", { x:264, y:76, width:112, height:34, rx:17, fill:"#22c55e" });
+    g.appendChild(chip);
+    const ct = el("text", { x:320, y:99, "font-size":15, "font-weight":"800", fill:"#fff", "text-anchor":"middle" });
+    ct.textContent = "便宜 " + (anim.singlePrice - perFlower) + " 元";
+    g.appendChild(ct);
+    svg.appendChild(g);
+  }
+
+  /* 播放进度控制 */
+  const ctrl = $("stageCtrl"); ctrl.innerHTML = "";
+  const play = document.createElement("button");
+  play.className = "act btn-play"; play.id = "playBtn";
+  play.textContent = "▶ 播放动画"; play.onclick = togglePlay;
+  ctrl.appendChild(play);
+  drawFrame();
+}
+
+function togglePlay(){
+  const S = STG;
+  S.playing = !S.playing;
+  $("playBtn").textContent = S.playing ? "⏸ 暂停" : "▶ 继续";
+  if (S.playing){ S.last = 0; S.raf = requestAnimationFrame(tickStage); }
+  else cancelAnimationFrame(S.raf);
+}
+
+function tickStage(ts){
+  const S = STG;
+  if (!S.last) S.last = ts;
+  const dt = Math.min((ts - S.last)/1000, 0.08); S.last = ts;
+  S.t += dt / 2.6;                       /* 全程约 2.6 秒 */
+  if (S.t >= 1){ S.t = 1; S.playing = false; drawFrame(); return; }
+  drawFrame();
+  if (S.playing) S.raf = requestAnimationFrame(tickStage);
+}
+
+function drawFrame(){
+  const S = STG, a = S.anim;
+  const p = S.t;                          /* 0 → 1 进度 */
+  const perFlower = a.bundlePrice / a.flowers;
+  const n = Math.min(a.flowers, 12);
+  const name = a.name || "花";
+  const ease = x => 1 - Math.pow(1 - x, 3);
+
+  /* 阶段映射 */
+  let splitP = 0, compareP = 0, singleP = 0;
+  if (a.mode === "singles"){ singleP = Math.min(1, p / 0.8); }
+  else if (a.mode === "split"){ splitP = Math.min(1, p / 0.9); }
+  else if (a.mode === "compare"){ compareP = Math.min(1, p / 0.9); }
+  else if (a.mode === "both"){
+    splitP = Math.min(1, p / 0.5);
+    compareP = Math.max(0, Math.min(1, (p - 0.5) / 0.4));
+  }
+
+  /* singles 模式：逐枝亮出单价 */
+  if (a.mode === "singles"){
+    for (let i = 0; i < n; i++){
+      const tag = document.querySelector(".tag-" + i);
+      if (tag){
+        const show = Math.max(0, Math.min(1, singleP * n - i));
+        tag.setAttribute("opacity", show.toFixed(2));
+        const jump = show > 0 && show < 1 ? Math.sin(show * Math.PI) * 6 : 0;
+        tag.setAttribute("y", 236 - jump);
+      }
+    }
+  }
+
+  /* split / both：金币逐枚落到每枝花下 */
+  if (a.mode === "split" || a.mode === "both"){
+    for (let i = 0; i < n; i++){
+      for (let c = 0; c < 6; c++){
+        const coin = document.querySelector(".coin-" + i + "-" + c);
+        if (!coin) continue;
+        /* 每枝花的金币按 (i*6+c) 顺序，在 splitP 内依次出现 */
+        const order = i * 6 + c;
+        const total = n * 6;
+        const show = Math.max(0, Math.min(1, splitP * total - order));
+        if (show <= 0){ coin.setAttribute("opacity", 0); coin.setAttribute("r", 0); continue; }
+        coin.setAttribute("opacity", 1);
+        coin.setAttribute("r", 5.5);
+        /* 从中央价格牌飞向花下堆叠位 */
+        const fx = document.querySelector(".flower-" + i);
+        const tx = fx ? +fx.getAttribute("x") : 320;
+        const sx = 320, sy = 32;
+        const ex = tx - 18 + (c % 3) * 9, ey = 176 + Math.floor(c / 3) * 9;
+        const e = ease(show);
+        coin.setAttribute("cx", sx + (ex - sx) * e);
+        coin.setAttribute("cy", sy + (ey - sy) * e);
+      }
+      /* 价格标签在金币落定后弹出 */
+      const doneFlowers = Math.floor(splitP * n);
+      const tag = document.querySelector(".tag-" + i);
+      if (tag){
+        const show = Math.max(0, Math.min(1, splitP * n - i - 0.5));
+        tag.setAttribute("opacity", show.toFixed(2));
+        const pop = show > 0 && show < 1 ? 1 + Math.sin(show * Math.PI) * 0.35 : 1;
+        tag.setAttribute("font-size", (15 * pop).toFixed(1));
+      }
+    }
+  }
+
+  /* compare / both：天平淡入 + 沉降动画 */
+  if (a.mode === "compare" || a.mode === "both"){
+    const scale = document.querySelector(".scale");
+    if (scale){
+      scale.setAttribute("opacity", compareP.toFixed(2));
+      /* 天平梁向便宜侧倾斜 */
+      const tilt = -7 * compareP;
+      const beam = scale.children[1];
+      beam.setAttribute("transform", "rotate(" + tilt + " 320 60)");
+    }
+  }
+
+  /* 时间线文案 */
+  const tl = $("timeline");
+  if (a.mode === "bundle"){
+    tl.innerHTML = "🌷 一束 " + name + " <b>" + a.bundlePrice + " 元</b>，共 " + a.flowers + " 枝（单买每枝 " + a.singlePrice + " 元）";
+  } else if (a.mode === "singles"){
+    tl.innerHTML = p < 1
+      ? "💷 单买模式：每枝都按标价 <b>" + a.singlePrice + " 元</b> 收钱…" + (p > 0.2 ? "  " + n + " 枝共 <b>" + (a.singlePrice * a.flowers) + " 元</b>！" : "")
+      : "💷 单买 " + a.flowers + " 枝共 " + (a.singlePrice * a.flowers) + " 元 ｜ 一束才 " + a.bundlePrice + " 元，差 " + (a.singlePrice * a.flowers - a.bundlePrice) + " 元！";
+  } else if (a.mode === "split"){
+    tl.innerHTML = p < 1
+      ? "🪙 把 " + a.bundlePrice + " 元平均分给 " + a.flowers + " 枝" + name + "…每枝 <b>" + perFlower + " 元</b>"
+      : "✨ 买一束的隐藏单价 = " + a.bundlePrice + " ÷ " + a.flowers + " = <b>" + perFlower + " 元/枝</b>（单买要 " + a.singlePrice + " 元）";
+  } else if (a.mode === "compare"){
+    tl.innerHTML = p < 1
+      ? "⚖️ 天平比一比：单买 " + a.singlePrice + " 元 vs 买一束 " + perFlower + " 元…"
+      : "⚖️ " + a.singlePrice + " − " + perFlower + " = <b>便宜 " + (a.singlePrice - perFlower) + " 元</b>！";
+  } else {  /* both */
+    if (p < 0.5) tl.innerHTML = "🪙 第一步：" + a.bundlePrice + " ÷ " + a.flowers + " = <b>" + perFlower + " 元/枝</b>";
+    else if (p < 0.9) tl.innerHTML = "⚖️ 第二步：天平升起…";
+    else tl.innerHTML = "🏆 完整解题：" + a.bundlePrice + " ÷ " + a.flowers + " = " + perFlower + "，" +
+      a.singlePrice + " − " + perFlower + " = <b>便宜 " + (a.singlePrice - perFlower) + " 元</b>！";
+  }
+}
+
+/* ══════════════════════════════════════════════ */
+/*  事件绑定 & 启动
+/* ══════════════════════════════════════════════ */
+$("checkBtn").onclick = checkAnswer;
+$("nextBtn").onclick = onNext;
+$("hintBtn").onclick = () => {
+  session.hint = true;
+  $("hintBox").innerHTML = "💡 <b>提示：</b>" + curQ().hint;
+  $("hintBox").classList.add("show-block");
+};
+$("solBtn").onclick = () => {
+  session.solved = true;
+  $("solBox").innerHTML = "📖 <b>解析：</b><br>" + curQ().sol;
+  $("solBox").classList.add("show-block");
+  $("nextBtn").disabled = false;
+  if (state.q === curLevel().qs.length - 1 && !state.done[state.level])
+    $("nextBtn").textContent = "完成本关 ⭐ →";
+};
+$("formulaBtn").onclick = () => $("formulaPanel").classList.toggle("show");
+document.addEventListener("click", e => {
+  if (!e.target.closest("#formulaPanel") && !e.target.closest("#formulaBtn"))
+    $("formulaPanel").classList.remove("show");
+});
+
+if (!levelUnlocked(state.level)) state.level = 0;
+if (state.q >= LEVELS[state.level].qs.length) state.q = 0;
+renderAll();
+</script>
+</body>
+</html>
